@@ -1,6 +1,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Build;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,12 +29,13 @@ namespace Yemen4x4.Editor
             PlayerSettings.allowedAutorotateToPortraitUpsideDown=false;
             PlayerSettings.allowedAutorotateToLandscapeLeft=true;
             PlayerSettings.allowedAutorotateToLandscapeRight=true;
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,ScriptingImplementation.IL2CPP);
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARM64;
-            PlayerSettings.Android.minSdkVersion=AndroidMinimumSdk();
+            PlayerSettings.Android.minSdkVersion=AndroidSdkVersions.AndroidApiLevel26;
+            PlayerSettings.Android.targetSdkVersion=AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.stripEngineCode=true;
             Directory.CreateDirectory("Builds/Android");
-            var options=new BuildPlayerOptions{scenes=new[]{scenePath},locationPathName="Builds/Android/Yemen4x4.apk",target=BuildTarget.Android,options=BuildOptions.None};
+            var options=new BuildPlayerOptions{scenes=new[]{scenePath},locationPathName="Builds/Android/Yemen4x4.apk",target=BuildTarget.Android,targetGroup=BuildTargetGroup.Android,options=BuildOptions.None};
             BuildReport report=BuildPipeline.BuildPlayer(options);
             if(report.summary.result!=BuildResult.Succeeded) throw new System.Exception("Android build failed: "+report.summary.result+" / "+report.summary.totalErrors+" errors");
             Debug.Log("Yemen 4x4 APK built: "+report.summary.outputPath+" ("+report.summary.totalSize+" bytes)");
