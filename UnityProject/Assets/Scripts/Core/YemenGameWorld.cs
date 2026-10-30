@@ -13,7 +13,7 @@ namespace Yemen4x4.Core
         private MissionFlow mission; private FuelSystem fuel; private Arcade4x4Controller car;
         private VehiclePaintCustomization paintSystem;
         private Transform carRoot, cameraPivot;
-        private Text status, fuelText, routeText; private Slider fuelBar;
+        private Text status, fuelText, routeText, cashText; private Slider fuelBar; private int cash;
         private readonly List<GameObject> routeMarkers = new List<GameObject>();
 
         private void Start(){CreateMaterials();BuildDepot();BuildRoadWorld();BuildVehicle();BuildCamera();BuildUI();mission=gameObject.AddComponent<MissionFlow>();SetStatus("اختر وجهتك من إحدى البوابات");}
@@ -59,7 +59,7 @@ namespace Yemen4x4.Core
         {
             if(FindObjectOfType<EventSystem>()==null){var eventSystem=new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));}
             var go=new GameObject("Game HUD",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));var canvas=go.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;go.GetComponent<CanvasScaler>().uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;go.GetComponent<CanvasScaler>().referenceResolution=new Vector2(1920,1080);
-            status=MakeText(canvas.transform,"Status",new Vector2(.5f,.93f),28);fuelText=MakeText(canvas.transform,"Fuel",new Vector2(.12f,.92f),24);routeText=MakeText(canvas.transform,"Route",new Vector2(.83f,.92f),24);fuelBar=MakeSlider(canvas.transform,new Vector2(.12f,.86f));
+            status=MakeText(canvas.transform,"Status",new Vector2(.5f,.93f),28);fuelText=MakeText(canvas.transform,"Fuel",new Vector2(.12f,.92f),24);routeText=MakeText(canvas.transform,"Route",new Vector2(.83f,.92f),24);cashText=MakeText(canvas.transform,"Cash",new Vector2(.5f,.86f),24);cashText.text="الرصيد: 0 ريال";fuelBar=MakeSlider(canvas.transform,new Vector2(.12f,.86f));
             MakeButton(canvas.transform,"لون السابق",new Vector2(.86f,.12f),()=>paintSystem.PreviewPrevious());MakeButton(canvas.transform,"لون التالي",new Vector2(.86f,.22f),()=>paintSystem.PreviewNext());MakeButton(canvas.transform,"اعتماد اللون",new Vector2(.86f,.32f),()=>paintSystem.ConfirmColor());
             MakeButton(canvas.transform,"تحميل الركاب",new Vector2(.5f,.12f),()=>mission.LoadPassengers());MakeButton(canvas.transform,"تسليم الركاب",new Vector2(.5f,.22f),()=>mission.ArriveAtDestination());MakeButton(canvas.transform,"العودة للفرزة",new Vector2(.5f,.32f),()=>mission.ReturnToDepot());MakeButton(canvas.transform,"تعبئة الوقود",new Vector2(.12f,.12f),()=>fuel.FillTank());
             MakeDriveButton(canvas.transform,"يمين",new Vector2(.68f,.3f),0,1);MakeDriveButton(canvas.transform,"يسار",new Vector2(.57f,.3f),0,-1);MakeDriveButton(canvas.transform,"تقدم",new Vector2(.68f,.45f),1,0);MakeDriveButton(canvas.transform,"فرامل",new Vector2(.57f,.45f),-1,0);
@@ -70,7 +70,7 @@ namespace Yemen4x4.Core
         private GameObject CreateButton(Transform p,string label,Vector2 a){var g=new GameObject(label,typeof(RectTransform),typeof(Image),typeof(Button));g.transform.SetParent(p,false);var r=g.GetComponent<RectTransform>();r.anchorMin=a;r.anchorMax=a;r.sizeDelta=new Vector2(220,76);g.GetComponent<Image>().color=new Color(.04f,.18f,.28f,.88f);var t=MakeText(g.transform,"Label",new Vector2(.5f,.5f),21);t.text=label;return g;}
         private void MakeButton(Transform p,string label,Vector2 a,UnityEngine.Events.UnityAction action){var g=CreateButton(p,label,a);g.GetComponent<Button>().onClick.AddListener(action);}
         public void SelectRoute(GovernorateRoute route){mission.ChooseRoute(route);if(routeText)routeText.text=route==GovernorateRoute.Mahweet?"المسار: المحويت":route==GovernorateRoute.Aden?"المسار: عدن":"المسار: تعز";SetStatus("تم اختيار الوجهة. توجه إلى الدائرة الزرقاء لتحميل الركاب");for(int i=0;i<routeMarkers.Count;i++)routeMarkers[i].SetActive(i==(int)route);}
-        public void OnMissionZoneEntered(MissionZoneType zone){if(mission==null)return;if(zone==MissionZoneType.Boarding){mission.LoadPassengers();SetStatus("تم تحميل الركاب. اتبع الطريق إلى وجهتك");}else if(zone==MissionZoneType.Destination){mission.ArriveAtDestination();SetStatus("وصلت إلى الوجهة! تم تسليم الركاب واستلام المكافأة. عد إلى صنعاء");}else if(zone==MissionZoneType.Depot){mission.ReturnToDepot();mission.StartNextMission();SetStatus("عدت إلى فرزة صنعاء. اختر وجهة جديدة");}}
+        public void OnMissionZoneEntered(MissionZoneType zone){if(mission==null)return;if(zone==MissionZoneType.Boarding){mission.LoadPassengers();SetStatus("تم تحميل الركاب. اتبع الطريق إلى وجهتك");}else if(zone==MissionZoneType.Destination){int reward=mission.SelectedRoute==GovernorateRoute.Mahweet?1800:mission.SelectedRoute==GovernorateRoute.Aden?6500:3200;mission.ArriveAtDestination();cash+=reward;if(cashText)cashText.text="الرصيد: "+cash.ToString("N0")+" ريال";SetStatus("وصلت إلى الوجهة! استلمت مكافأة "+reward.ToString("N0")+" ريال. عد إلى صنعاء");}else if(zone==MissionZoneType.Depot){mission.ReturnToDepot();mission.StartNextMission();SetStatus("عدت إلى فرزة صنعاء. اختر وجهة جديدة");}}
         public void SetStatus(string value){if(status)status.text=value;}
     }
     public sealed class RouteGate:MonoBehaviour
