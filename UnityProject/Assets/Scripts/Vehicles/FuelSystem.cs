@@ -15,7 +15,7 @@ namespace Yemen4x4.Vehicles
         private void Update()
         {
             if (IsEmpty) return;
-            Fuel = Mathf.Max(0f, Fuel - consumptionPerSecond * Mathf.Abs(Input.GetAxis("Vertical")) * Time.deltaTime);
+            var controller=GetComponent<Arcade4x4Controller>();float load=controller?controller.DriveInput:Mathf.Abs(Input.GetAxis("Vertical"));Fuel = Mathf.Max(0f, Fuel - consumptionPerSecond * load * Time.deltaTime);
             onFuelChanged?.Invoke(Fuel / tankCapacity);
         }
         public void Refuel(float litres)

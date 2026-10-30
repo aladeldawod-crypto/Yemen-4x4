@@ -1,0 +1,35 @@
+name: Build Yemen 4x4 Unity Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Unity 6 Android ARM64 APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build with Unity
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: UnityProject
+          unityVersion: 6000.0.32f1
+          targetPlatform: Android
+          buildMethod: Yemen4x4.Editor.AndroidBuild.Build
+          allowDirtyBuild: true
+          customParameters: -logFile -
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yemen-4x4-Unity-Android-APK
+          path: UnityProject/Builds/Android/Yemen4x4.apk
+          if-no-files-found: error
+          retention-days: 14
