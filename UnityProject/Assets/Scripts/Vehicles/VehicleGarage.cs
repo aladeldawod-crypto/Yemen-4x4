@@ -15,12 +15,12 @@ namespace Yemen4x4.Vehicles
             new ModelSpec{id="lc70_shas_2026",title="Land Cruiser 70 / Shas 2026",bodyScale=new Vector3(2f,1f,4.5f),cabinScale=new Vector3(1.8f,1.15f,2.1f),wheelBase=1.55f},
             new ModelSpec{id="jeep_quarter",title="Jeep Quarter",bodyScale=new Vector3(1.8f,.65f,3.4f),cabinScale=new Vector3(1.7f,.75f,1.8f),wheelBase=1.2f}
         };
-        private Transform root; private Renderer bodyRenderer; private Text label; private int selected;
+        private Transform root; private Renderer bodyRenderer; private Text label; private int selected; private GameObject pickupBed,suvRear,shasSpare,jeepCage;
         private readonly Color[] palette={Color.white,new Color(.025f,.025f,.03f),new Color(.55f,.58f,.61f),new Color(.72f,.06f,.035f),new Color(.66f,.48f,.27f),new Color(.12f,.28f,.15f)};
         private int colorIndex;
         public void Initialize(Transform vehicleRoot, Renderer body, Transform ui)
         {
-            root=vehicleRoot; bodyRenderer=body;
+            root=vehicleRoot; bodyRenderer=body;pickupBed=root.Find("Hilux pickup bed")?.gameObject;suvRear=root.Find("VXR rear cabin")?.gameObject;shasSpare=root.Find("Shas rear spare")?.gameObject;jeepCage=root.Find("Jeep roll cage")?.gameObject;
             var g=new GameObject("Garage model label",typeof(RectTransform),typeof(Text));g.transform.SetParent(ui,false);
             var r=g.GetComponent<RectTransform>();r.anchorMin=new Vector2(.5f,.03f);r.anchorMax=new Vector2(.5f,.03f);r.sizeDelta=new Vector2(520,48);
             label=g.GetComponent<Text>();label.font=Resources.GetBuiltinResource<Font>("Arial.ttf");label.fontSize=22;label.alignment=TextAnchor.MiddleCenter;label.color=Color.white;
@@ -33,7 +33,7 @@ namespace Yemen4x4.Vehicles
         public void ConfirmColor(){PlayerPrefs.SetInt("vehicle.paint."+Specs[selected].id,colorIndex);PlayerPrefs.Save();}
         private void ApplyModel(int index)
         {
-            selected=index; var spec=Specs[selected];
+            selected=index; var spec=Specs[selected];if(pickupBed)pickupBed.SetActive(selected==0);if(suvRear)suvRear.SetActive(selected==1);if(shasSpare)shasSpare.SetActive(selected==2);if(jeepCage)jeepCage.SetActive(selected==3);
             root.localScale=Vector3.one;
             var body=root.Find("Vehicle paint body"); if(body)body.localScale=spec.bodyScale;
             var cabin=root.Find("Cabin");if(cabin){cabin.localScale=spec.cabinScale;cabin.localPosition=new Vector3(0,spec.bodyScale.y*.85f,-.45f);}
