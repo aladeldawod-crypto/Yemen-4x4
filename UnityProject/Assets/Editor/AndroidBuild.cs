@@ -10,6 +10,7 @@ namespace Yemen4x4.Editor
 {
     public static class AndroidBuild
     {
+        [MenuItem("Yemen 4x4/Build Android APK")]
         public static void Build()
         {
             const string scenePath="Assets/Scenes/Yemen4x4_Main.unity";
