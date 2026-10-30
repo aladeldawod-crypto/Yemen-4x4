@@ -6,6 +6,7 @@ namespace Yemen4x4.World
     public sealed class WorldLifeSpawner : MonoBehaviour
     {
         private Transform player;
+        private int trafficVehicleIndex;
         private Material skin,cloth,vehicleMat,animalMat;
         public void Build(Transform playerTransform,Material roadMaterial,Material sandMaterial)
         {
@@ -24,8 +25,14 @@ namespace Yemen4x4.World
         }
         private void CreateTraffic(Vector3 p)
         {
-            var root=new GameObject("AI road traffic 4x4");root.transform.position=p;var body=GameObject.CreatePrimitive(PrimitiveType.Cube);body.transform.SetParent(root.transform);body.transform.localPosition=new Vector3(0,.45f,0);body.transform.localScale=new Vector3(1.9f,.75f,3.8f);body.GetComponent<Renderer>().sharedMaterial=vehicleMat;
-            var mover=root.AddComponent<TrafficMover>();mover.Configure(player,12f+(p.z%8f),p.z);
+            var root = new GameObject("AI traffic GLB vehicle");
+            root.transform.position = p;
+            bool useTruck = (trafficVehicleIndex++ % 2) == 0;
+            var loader = root.AddComponent<GlbVehicleRuntimeLoader>();
+            loader.Configure(useTruck ? "Traffic_DumpTruck.glb" : "Traffic_ArmoredVehicle.glb",
+                useTruck ? 6.0f : 4.8f, Vector3.zero);
+            var mover = root.AddComponent<TrafficMover>();
+            mover.Configure(player, 12f + (p.z % 8f), p.z);
         }
         private void CreateAnimal(Vector3 p)
         {
