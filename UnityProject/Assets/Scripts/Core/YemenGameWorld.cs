@@ -47,22 +47,16 @@ namespace Yemen4x4.Core
         private void BuildTerrainAndLife(){terrain=gameObject.AddComponent<ProceduralYemenTerrain>();terrain.Build(stone,sand);lifeSpawner=gameObject.AddComponent<WorldLifeSpawner>();lifeSpawner.Build(carRoot,asphalt,sand);}
         private void BuildVehicle()
         {
-            carRoot=new GameObject("4x4 pickup prototype");carRoot.transform.position=new Vector3(0,.8f,-12);var rb=carRoot.AddComponent<Rigidbody>();rb.mass=2100;rb.drag=.05f;rb.angularDrag=2.5f;rb.centerOfMass=new Vector3(0,-.35f,0);
-            carRoot.AddComponent<BoxCollider>().size=new Vector3(2,1,4.5f);
-            var body=Cube("Vehicle paint body",carRoot.position+new Vector3(0,.35f,0),new Vector3(2,.8f,4.2f),paint,carRoot.transform);
-            Cube("Cabin",carRoot.position+new Vector3(0,1.05f,-.45f),new Vector3(1.8f,.9f,2f),glass,carRoot.transform);
-            Cube("Front steel bumper",carRoot.position+new Vector3(0,-.05f,2.18f),new Vector3(2.15f,.22f,.22f),metal,carRoot.transform);Cube("Rear steel bumper",carRoot.position+new Vector3(0,-.05f,-2.18f),new Vector3(2.15f,.22f,.22f),metal,carRoot.transform);Cube("Front grille",carRoot.position+new Vector3(0,.38f,2.13f),new Vector3(.9f,.38f,.08f),metal,carRoot.transform);
-            for(int x=-1;x<=1;x+=2){Sphere("LED headlamp",carRoot.position+new Vector3(x*.72f,.52f,2.14f),new Vector3(.34f,.28f,.12f),lamp).transform.SetParent(carRoot.transform);Sphere("Rear tail lamp",carRoot.position+new Vector3(x*.82f,.42f,-2.14f),new Vector3(.22f,.42f,.12f),tailLamp).transform.SetParent(carRoot.transform);Cube("Side mirror",carRoot.position+new Vector3(x*1.05f,1.12f,.45f),new Vector3(.28f,.2f,.3f),metal,carRoot.transform);}
-            Cube("Roof rack front rail",carRoot.position+new Vector3(0,1.55f,-.45f),new Vector3(1.65f,.08f,1.75f),metal,carRoot.transform);
-            var bed=Cube("Hilux pickup bed",carRoot.position+new Vector3(0,.65f,-1.48f),new Vector3(1.75f,.35f,1.25f),metal,carRoot.transform);Cube("Pickup bed left wall",carRoot.position+new Vector3(-.88f,.92f,-1.48f),new Vector3(.12f,.55f,1.35f),paint,carRoot.transform);Cube("Pickup bed right wall",carRoot.position+new Vector3(.88f,.92f,-1.48f),new Vector3(.12f,.55f,1.35f),paint,carRoot.transform);
-            var suv=Cube("VXR rear cabin",carRoot.position+new Vector3(0,1.08f,-1.5f),new Vector3(1.82f,1.05f,1.85f),glass,carRoot.transform);Cube("VXR roof extension",carRoot.position+new Vector3(0,1.66f,-1.48f),new Vector3(1.9f,.16f,2f),paint,carRoot.transform);
-            var spare=Cylinder("Shas rear spare",carRoot.position+new Vector3(0,.8f,-2.25f),new Vector3(.62f,.3f,.62f),rubber,carRoot.transform,new Vector3(0,0,90));
-            var cage=Cube("Jeep roll cage",carRoot.position+new Vector3(0,1.45f,-.35f),new Vector3(1.8f,.12f,2.1f),metal,carRoot.transform);Cube("Jeep cage left upright",carRoot.position+new Vector3(-.82f,1.05f,-.35f),new Vector3(.1f,.95f,.1f),metal,carRoot.transform);Cube("Jeep cage right upright",carRoot.position+new Vector3(.82f,1.05f,-.35f),new Vector3(.1f,.95f,.1f),metal,carRoot.transform);
-            bed.name="Hilux pickup bed";suv.name="VXR rear cabin";spare.name="Shas rear spare";cage.name="Jeep roll cage";
-            for(int x=-1;x<=1;x+=2)for(int z=-1;z<=1;z+=2){Vector3 wp=carRoot.position+new Vector3(x*1.05f,-.1f,z*1.45f);Cylinder("All terrain tyre",wp,new Vector3(.72f,.28f,.72f),rubber,carRoot.transform,new Vector3(0,0,90));Cylinder("Wheel alloy rim",wp+new Vector3(x*.15f,0,0),new Vector3(.36f,.3f,.36f),metal,carRoot.transform,new Vector3(0,0,90));}
-            car=carRoot.AddComponent<Arcade4x4Controller>();fuel=carRoot.AddComponent<FuelSystem>();
-            paintSystem=carRoot.AddComponent<VehiclePaintCustomization>();
-            paintSystem.Configure("hilux_2026",new[]{body.GetComponent<Renderer>()},new[]{new PaintOption{displayName="أبيض",color=Color.white},new PaintOption{displayName="أسود",color=new Color(.025f,.025f,.03f)},new PaintOption{displayName="فضي",color=new Color(.55f,.58f,.61f)},new PaintOption{displayName="أحمر",color=new Color(.72f,.06f,.035f)},new PaintOption{displayName="رملي",color=new Color(.66f,.48f,.27f)},new PaintOption{displayName="أخضر",color=new Color(.12f,.28f,.15f)}});
+            carRoot = new GameObject("Player Sedan - GLB");
+            carRoot.transform.position = new Vector3(0, .8f, -12);
+            var rb = carRoot.AddComponent<Rigidbody>();
+            rb.mass = 1550f; rb.drag = .05f; rb.angularDrag = 2.5f;
+            rb.centerOfMass = new Vector3(0, -.35f, 0);
+            carRoot.AddComponent<BoxCollider>().size = new Vector3(2f, 1.4f, 4.6f);
+            var model = carRoot.AddComponent<GlbVehicleRuntimeLoader>();
+            model.Configure("Player_Sedan.glb", 4.6f, Vector3.zero);
+            car = carRoot.AddComponent<Arcade4x4Controller>();
+            fuel = carRoot.AddComponent<FuelSystem>();
         }
         private void BuildCamera(){var c=Camera.main;if(!c){var g=new GameObject("Main Camera");c=g.AddComponent<Camera>();g.tag="MainCamera";}cameraPivot=new GameObject("Camera follow").transform;c.transform.SetParent(cameraPivot);c.transform.localPosition=new Vector3(0,5,-9);c.transform.localRotation=Quaternion.Euler(18,0,0);}
         private void LateUpdate(){if(cameraPivot&&carRoot)cameraPivot.position=Vector3.Lerp(cameraPivot.position,carRoot.position,Time.deltaTime*4f);if(fuelBar&&fuel)fuelBar.value=fuel.Fuel/80f;if(fuelText&&fuel)fuelText.text="الوقود "+Mathf.CeilToInt(fuel.Fuel)+" L";}
