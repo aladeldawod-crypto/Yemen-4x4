@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Yemen4x4.Missions;
 using Yemen4x4.Vehicles;
 
@@ -55,6 +56,7 @@ namespace Yemen4x4.Core
         private void LateUpdate(){if(cameraPivot&&carRoot)cameraPivot.position=Vector3.Lerp(cameraPivot.position,carRoot.position,Time.deltaTime*4f);if(fuelBar&&fuel)fuelBar.value=fuel.Fuel/80f;if(fuelText&&fuel)fuelText.text="الوقود "+Mathf.CeilToInt(fuel.Fuel)+" L";}
         private void BuildUI()
         {
+            if(FindObjectOfType<EventSystem>()==null){var eventSystem=new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));}
             var go=new GameObject("Game HUD",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));var canvas=go.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;go.GetComponent<CanvasScaler>().uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;go.GetComponent<CanvasScaler>().referenceResolution=new Vector2(1920,1080);
             status=MakeText(canvas.transform,"Status",new Vector2(.5f,.93f),28);fuelText=MakeText(canvas.transform,"Fuel",new Vector2(.12f,.92f),24);routeText=MakeText(canvas.transform,"Route",new Vector2(.83f,.92f),24);fuelBar=MakeSlider(canvas.transform,new Vector2(.12f,.86f));
             MakeButton(canvas.transform,"لون السابق",new Vector2(.86f,.12f),()=>paintSystem.PreviewPrevious());MakeButton(canvas.transform,"لون التالي",new Vector2(.86f,.22f),()=>paintSystem.PreviewNext());MakeButton(canvas.transform,"اعتماد اللون",new Vector2(.86f,.32f),()=>paintSystem.ConfirmColor());
