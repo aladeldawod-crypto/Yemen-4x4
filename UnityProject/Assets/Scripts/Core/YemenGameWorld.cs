@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Yemen4x4.Missions;
 using Yemen4x4.Vehicles;
+using Yemen4x4.World;
 
 namespace Yemen4x4.Core
 {
@@ -11,12 +12,12 @@ namespace Yemen4x4.Core
     {
         private Material asphalt, sand, dirt, mud, stone, plaster, trim, blue, glass, rubber, paint;
         private MissionFlow mission; private FuelSystem fuel; private Arcade4x4Controller car;
-        private VehiclePaintCustomization paintSystem;
+        private VehiclePaintCustomization paintSystem; private VehicleGarage garage; private RuntimeMiniMap miniMap; private DayNightWeather weather; private Light sunLight; private ProceduralYemenTerrain terrain; private WorldLifeSpawner lifeSpawner;
         private Transform carRoot, cameraPivot;
         private Text status, fuelText, routeText, cashText; private Slider fuelBar; private int cash;
         private readonly List<GameObject> routeMarkers = new List<GameObject>();
 
-        private void Start(){CreateMaterials();BuildDepot();BuildRoadWorld();BuildVehicle();BuildCamera();BuildUI();mission=gameObject.AddComponent<MissionFlow>();SetStatus("اختر وجهتك من إحدى البوابات");}
+        private void Start(){CreateMaterials();BuildDepot();BuildRoadWorld();BuildVehicle();BuildTerrainAndLife();BuildCamera();BuildUI();garage=carRoot.AddComponent<VehicleGarage>();garage.Initialize(carRoot,carRoot.Find("Vehicle paint body").GetComponent<Renderer>(),FindObjectOfType<Canvas>().transform);mission=gameObject.AddComponent<MissionFlow>();weather=gameObject.AddComponent<DayNightWeather>();weather.Initialize(sunLight,carRoot);miniMap=gameObject.AddComponent<RuntimeMiniMap>();miniMap.Initialize(carRoot,null,FindObjectOfType<Canvas>().transform);SetStatus("اختر وجهتك من إحدى البوابات");}
         private Material Mat(Color c,float metallic=0f,float smooth=.25f){var m=new Material(Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard"));m.color=c;m.SetFloat("_Metallic",metallic);m.SetFloat("_Smoothness",smooth);return m;}
         private void CreateMaterials(){asphalt=Mat(new Color(.16f,.17f,.18f));sand=Mat(new Color(.67f,.48f,.27f));dirt=Mat(new Color(.38f,.25f,.15f));mud=Mat(new Color(.19f,.14f,.10f));stone=Mat(new Color(.38f,.36f,.32f));plaster=Mat(new Color(.78f,.69f,.53f));trim=Mat(new Color(.30f,.19f,.12f));blue=Mat(new Color(.05f,.55f,1f),.1f,.65f);glass=Mat(new Color(.08f,.18f,.22f),.25f,.8f);rubber=Mat(new Color(.025f,.025f,.025f));paint=Mat(new Color(.72f,.08f,.045f),.35f,.55f);}
         private GameObject Cube(string n,Vector3 p,Vector3 s,Material m,Transform parent=null){var g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=n;g.transform.SetParent(parent);g.transform.position=p;g.transform.localScale=s;if(m)g.GetComponent<Renderer>().sharedMaterial=m;return g;}
@@ -24,7 +25,7 @@ namespace Yemen4x4.Core
         private void BuildDepot()
         {
             RenderSettings.ambientLight=new Color(.62f,.59f,.53f);RenderSettings.fog=true;RenderSettings.fogColor=new Color(.72f,.66f,.56f);RenderSettings.fogDensity=.0035f;
-            var sun=new GameObject("Sun").AddComponent<Light>();sun.type=LightType.Directional;sun.intensity=1.25f;sun.transform.rotation=Quaternion.Euler(48,-32,0);
+            sunLight=new GameObject("Sun").AddComponent<Light>();sunLight.type=LightType.Directional;sunLight.intensity=1.25f;sunLight.transform.rotation=Quaternion.Euler(48,-32,0);
             Cube("Sanaa depot ground",new Vector3(0,-.35f,0),new Vector3(90,.6f,70),dirt);Cube("Depot asphalt apron",new Vector3(0,-.02f,7),new Vector3(66,.12f,23),asphalt);
             for(int i=0;i<5;i++){float x=-32+i*16;Cube("Sanaani tower house",new Vector3(x,4,-23),new Vector3(10,8,8),plaster);Cube("Upper storey",new Vector3(x,9,-23),new Vector3(8,2,7),trim);Cube("Roof parapet",new Vector3(x,10.3f,-23),new Vector3(10,.6f,8),plaster);for(int w=-1;w<=1;w++)Cube("Decorative window",new Vector3(x+w*2.5f,5,-18.9f),new Vector3(1.1f,1.8f,.12f),glass);}
             string[] names={"محافظة المحويت","محافظة عدن","محافظة تعز"};
@@ -42,6 +43,7 @@ namespace Yemen4x4.Core
             routeMarkers.Add(Sphere("Mahweet destination",new Vector3(-9,13,215),new Vector3(5,.2f,5),blue));routeMarkers.Add(Sphere("Aden destination",new Vector3(20,5,285),new Vector3(5,.2f,5),blue));routeMarkers.Add(Sphere("Taiz destination",new Vector3(7,8,245),new Vector3(5,.2f,5),blue));for(int i=0;i<routeMarkers.Count;i++){var marker=routeMarkers[i];marker.GetComponent<Collider>().isTrigger=true;marker.AddComponent<MissionZone>().Configure(this,MissionZoneType.Destination);marker.SetActive(false);}
         }
         private void RoadStrip(string n,Vector3 a,Vector3 b,float width,Material mat){Vector3 d=(b-a).normalized,side=Vector3.Cross(d,Vector3.up).normalized*width*.5f;var mesh=new Mesh();mesh.vertices=new[]{a-side,a+side,b-side,b+side};mesh.triangles=new[]{0,2,1,2,3,1};mesh.RecalculateNormals();var go=new GameObject(n);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=mat;go.AddComponent<MeshCollider>().sharedMesh=mesh;}
+        private void BuildTerrainAndLife(){terrain=gameObject.AddComponent<ProceduralYemenTerrain>();terrain.Build(stone,sand);lifeSpawner=gameObject.AddComponent<WorldLifeSpawner>();lifeSpawner.Build(carRoot,asphalt,sand);}
         private void BuildVehicle()
         {
             carRoot=new GameObject("4x4 pickup prototype");carRoot.transform.position=new Vector3(0,.8f,-12);var rb=carRoot.AddComponent<Rigidbody>();rb.mass=2100;rb.drag=.05f;rb.angularDrag=2.5f;rb.centerOfMass=new Vector3(0,-.35f,0);
@@ -60,7 +62,7 @@ namespace Yemen4x4.Core
             if(FindObjectOfType<EventSystem>()==null){var eventSystem=new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));}
             var go=new GameObject("Game HUD",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));var canvas=go.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;go.GetComponent<CanvasScaler>().uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;go.GetComponent<CanvasScaler>().referenceResolution=new Vector2(1920,1080);
             status=MakeText(canvas.transform,"Status",new Vector2(.5f,.93f),28);fuelText=MakeText(canvas.transform,"Fuel",new Vector2(.12f,.92f),24);routeText=MakeText(canvas.transform,"Route",new Vector2(.83f,.92f),24);cashText=MakeText(canvas.transform,"Cash",new Vector2(.5f,.86f),24);cashText.text="الرصيد: 0 ريال";fuelBar=MakeSlider(canvas.transform,new Vector2(.12f,.86f));
-            MakeButton(canvas.transform,"لون السابق",new Vector2(.86f,.12f),()=>paintSystem.PreviewPrevious());MakeButton(canvas.transform,"لون التالي",new Vector2(.86f,.22f),()=>paintSystem.PreviewNext());MakeButton(canvas.transform,"اعتماد اللون",new Vector2(.86f,.32f),()=>paintSystem.ConfirmColor());
+            MakeButton(canvas.transform,"لون السابق",new Vector2(.86f,.12f),()=>garage.PreviousColor());MakeButton(canvas.transform,"لون التالي",new Vector2(.86f,.22f),()=>garage.NextColor());MakeButton(canvas.transform,"اعتماد اللون",new Vector2(.86f,.32f),()=>garage.ConfirmColor());MakeButton(canvas.transform,"المركبة التالية",new Vector2(.13f,.32f),()=>garage.SelectNext());MakeButton(canvas.transform,"المركبة السابقة",new Vector2(.13f,.42f),()=>garage.SelectPrevious());MakeButton(canvas.transform,"مطر تشغيل/إيقاف",new Vector2(.5f,.42f),()=>weather.ToggleRain());
             MakeButton(canvas.transform,"تحميل الركاب",new Vector2(.5f,.12f),()=>mission.LoadPassengers());MakeButton(canvas.transform,"تسليم الركاب",new Vector2(.5f,.22f),()=>mission.ArriveAtDestination());MakeButton(canvas.transform,"العودة للفرزة",new Vector2(.5f,.32f),()=>mission.ReturnToDepot());MakeButton(canvas.transform,"تعبئة الوقود",new Vector2(.12f,.12f),()=>fuel.FillTank());
             MakeDriveButton(canvas.transform,"يمين",new Vector2(.68f,.3f),0,1);MakeDriveButton(canvas.transform,"يسار",new Vector2(.57f,.3f),0,-1);MakeDriveButton(canvas.transform,"تقدم",new Vector2(.68f,.45f),1,0);MakeDriveButton(canvas.transform,"فرامل",new Vector2(.57f,.45f),-1,0);
         }
@@ -69,7 +71,7 @@ namespace Yemen4x4.Core
         private void MakeDriveButton(Transform p,string label,Vector2 a,float drive,float turn){var g=CreateButton(p,label,a);var hold=g.AddComponent<MobileDriveHold>();hold.Configure(car,drive,turn);}
         private GameObject CreateButton(Transform p,string label,Vector2 a){var g=new GameObject(label,typeof(RectTransform),typeof(Image),typeof(Button));g.transform.SetParent(p,false);var r=g.GetComponent<RectTransform>();r.anchorMin=a;r.anchorMax=a;r.sizeDelta=new Vector2(220,76);g.GetComponent<Image>().color=new Color(.04f,.18f,.28f,.88f);var t=MakeText(g.transform,"Label",new Vector2(.5f,.5f),21);t.text=label;return g;}
         private void MakeButton(Transform p,string label,Vector2 a,UnityEngine.Events.UnityAction action){var g=CreateButton(p,label,a);g.GetComponent<Button>().onClick.AddListener(action);}
-        public void SelectRoute(GovernorateRoute route){mission.ChooseRoute(route);if(routeText)routeText.text=route==GovernorateRoute.Mahweet?"المسار: المحويت":route==GovernorateRoute.Aden?"المسار: عدن":"المسار: تعز";SetStatus("تم اختيار الوجهة. توجه إلى الدائرة الزرقاء لتحميل الركاب");for(int i=0;i<routeMarkers.Count;i++)routeMarkers[i].SetActive(i==(int)route);}
+        public void SelectRoute(GovernorateRoute route){mission.ChooseRoute(route);if(routeText)routeText.text=route==GovernorateRoute.Mahweet?"المسار: المحويت":route==GovernorateRoute.Aden?"المسار: عدن":"المسار: تعز";SetStatus("تم اختيار الوجهة. توجه إلى الدائرة الزرقاء لتحميل الركاب");for(int i=0;i<routeMarkers.Count;i++)routeMarkers[i].SetActive(i==(int)route);if(miniMap)miniMap.SetDestination(routeMarkers[(int)route].transform);}
         public void OnMissionZoneEntered(MissionZoneType zone){if(mission==null)return;if(zone==MissionZoneType.Boarding){mission.LoadPassengers();SetStatus("تم تحميل الركاب. اتبع الطريق إلى وجهتك");}else if(zone==MissionZoneType.Destination){int reward=mission.SelectedRoute==GovernorateRoute.Mahweet?1800:mission.SelectedRoute==GovernorateRoute.Aden?6500:3200;mission.ArriveAtDestination();cash+=reward;if(cashText)cashText.text="الرصيد: "+cash.ToString("N0")+" ريال";SetStatus("وصلت إلى الوجهة! استلمت مكافأة "+reward.ToString("N0")+" ريال. عد إلى صنعاء");}else if(zone==MissionZoneType.Depot){mission.ReturnToDepot();mission.StartNextMission();SetStatus("عدت إلى فرزة صنعاء. اختر وجهة جديدة");}}
         public void SetStatus(string value){if(status)status.text=value;}
     }

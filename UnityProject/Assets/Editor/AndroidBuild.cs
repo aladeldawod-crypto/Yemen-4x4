@@ -37,6 +37,6 @@ namespace Yemen4x4.Editor
             if(report.summary.result!=BuildResult.Succeeded) throw new System.Exception("Android build failed: "+report.summary.result+" / "+report.summary.totalErrors+" errors");
             Debug.Log("Yemen 4x4 APK built: "+report.summary.outputPath+" ("+report.summary.totalSize+" bytes)");
         }
-        private static AndroidSdkVersions Android最低Sdk(){return AndroidSdkVersions.AndroidApiLevel26;}
+        private static AndroidSdkVersions AndroidMinimumSdk(){return AndroidSdkVersions.AndroidApiLevel26;}
     }
 }
