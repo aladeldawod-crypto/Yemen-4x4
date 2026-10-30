@@ -46,7 +46,11 @@ jobs:
           echo "Using sdkmanager: $SDKMANAGER"
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+          # sdkmanager may close the input pipe after accepting licenses; do not
+          # let Bash pipefail treat the resulting SIGPIPE from yes as a build failure.
+          set +o pipefail
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses
+          set -o pipefail
           "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Install dependencies
